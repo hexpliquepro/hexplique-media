@@ -43,7 +43,7 @@ Ce document centralise l'état d'avancement des développements, le point de rep
 | ID | Tâche | Priorité | Complexité | Effort Est. | Tokens (Est. / Réel) | Statut | Rôle / Composant |
 | :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
 | **R-xx** | Production quotidienne des réels (récurrent) | Haute | 🟡 Moyenne | ~45 min / réel | ~80k / — | 🔁 Récurrent | `reels/`, `CALENDRIER.md` |
-| **T-01** | Valider le réel A05 (Grok Build) | Haute | 🟢 Faible | ~5 min (propriétaire) | ~5k / — | 🟠 En attente propriétaire | `reels/A05-grok-apps` |
+| **T-01** | Valider le réel A05 (Grok Build) | Haute | 🟢 Faible | ~5 min (propriétaire) | ~5k / — | ✅ Validé le 14/11, publication programmée dim. 15/11 10:00 | `reels/A05-grok-apps` |
 | **T-02** | Publication directe chez Meta via GitHub Actions (deux dépôts) | Haute | 🔴 Élevée | ~4-6h | ~150k / — | 🟡 Code prêt, en attente installation propriétaire | `publisher/`, `hexplique-publish` |
 | **T-03** | Renouvellement automatique du token Instagram (GitHub App) | Haute | 🟡 Moyenne | ~1h30 | ~50k / — | 🟡 Code prêt et testé (dans T-02), activation à l’installation | `publisher/` |
 | **T-04** | Fin de l'hébergement public (hexplique-media privé ou supprimé) | Haute | 🟢 Faible | ~15 min | ~10k / — | ⚪ À faire (après T-02) | GitHub |
