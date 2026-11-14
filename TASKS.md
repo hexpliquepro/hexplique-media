@@ -32,7 +32,7 @@ Ce document centralise l'état d'avancement des développements, le point de rep
   - **T-01** : validation du réel A05 (dim. 15/11 10:00).
   - **T-02** : publication directe chez Meta, dès que les prérequis sont levés.
 - **Points d'attention / Prérequis pour la reprise :**
-  - T-02 bloquée par : plan GitHub (environnements sur dépôt privé), identifiant GitHub personnel du propriétaire (relecteur), compte Instagram de test, app Meta + tokens.
+  - T-02 en attente de l'installation par le propriétaire (`publisher/README.md`), puis d'un essai réel.
   - `memoire.md` / `TASKS.md` sont dans un dépôt **public** : n'y rien écrire de sensible (T-05).
   - Ne rien déployer sans autorisation explicite du propriétaire.
 
@@ -44,10 +44,10 @@ Ce document centralise l'état d'avancement des développements, le point de rep
 | :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
 | **R-xx** | Production quotidienne des réels (récurrent) | Haute | 🟡 Moyenne | ~45 min / réel | ~80k / — | 🔁 Récurrent | `reels/`, `CALENDRIER.md` |
 | **T-01** | Valider le réel A05 (Grok Build) | Haute | 🟢 Faible | ~5 min (propriétaire) | ~5k / — | 🟠 En attente propriétaire | `reels/A05-grok-apps` |
-| **T-02** | Publication directe chez Meta via GitHub Actions (dev / prod) | Haute | 🔴 Élevée | ~4-6h | ~150k / — | 🟡 Étude faite, en attente prérequis | CI, `hexplique-publish` |
-| **T-03** | Renouvellement automatique du token Instagram (GitHub App) | Haute | 🟡 Moyenne | ~1h30 | ~50k / — | ⚪ À faire (après T-02) | CI |
+| **T-02** | Publication directe chez Meta via GitHub Actions (deux dépôts) | Haute | 🔴 Élevée | ~4-6h | ~150k / — | 🟡 Code prêt, en attente installation propriétaire | `publisher/`, `hexplique-publish` |
+| **T-03** | Renouvellement automatique du token Instagram (GitHub App) | Haute | 🟡 Moyenne | ~1h30 | ~50k / — | 🟡 Code prêt et testé (dans T-02), activation à l’installation | `publisher/` |
 | **T-04** | Fin de l'hébergement public (hexplique-media privé ou supprimé) | Haute | 🟢 Faible | ~15 min | ~10k / — | ⚪ À faire (après T-02) | GitHub |
-| **T-05** | Déplacer `memoire.md` / `TASKS.md` dans un dépôt privé | Haute | 🟢 Faible | ~10 min | ~10k / — | ⚪ À faire (décision propriétaire) | GitHub |
+| **T-05** | Registres dans un dépôt privé | Haute | 🟢 Faible | — | — | 🔵 Réglé par T-04 (hexplique-media devient privé) | GitHub |
 | **T-06** | Windsor en lecture seule : procédure + éventuelle restriction des permissions | Moyenne | 🟢 Faible | ~30 min | ~15k / — | ⚪ À faire (après T-02) | `CLAUDE.md`, Windsor |
 | **T-07** | Story S01 : publication manuelle + collecte des réponses | Moyenne | 🟢 Faible | ~15 min | ~10k / — | 🟠 En attente propriétaire | `stories/` |
 | **T-08** | Comparatif d'audience actu vs notions (stats Windsor) | Moyenne | 🟡 Moyenne | ~1h | ~40k / — | ⚪ À faire (≥ 48 h de recul) | Windsor (lecture) |
@@ -59,21 +59,22 @@ Ce document centralise l'état d'avancement des développements, le point de rep
 ## 🚀 En Cours (In Progress)
 
 ### [T-02] Publication directe chez Meta via GitHub Actions
-- **Objectif :** supprimer toute URL publique : le runner GitHub envoie le MP4 validé directement chez Meta (upload resumable de l'API Instagram), sur ordre du propriétaire.
-- **Composant :** dépôt privé dédié (proposé : `hexplique-publish`), branches `dev` / `main`, environnements `instagram-dev` / `instagram-prod`.
+- **Objectif :** supprimer toute URL publique : le runner GitHub envoie le MP4 validé directement chez Meta (upload resumable), sur clic du propriétaire.
+- **Composant :** `hexplique-media` (privé à terme : branche `content` = file d'attente, `publisher/` = code proposé) ; `hexplique-publish` (privé, compte personnel du propriétaire : workflows + secrets).
 - **Complexité / Effort :** 🔴 Élevée (~4-6h)
 - **Budget Tokens Estimé :** ~150 k tokens
 - **Avancement :**
-  - [x] Étude d'architecture et comparatif des options
-  - [x] Choix validés : GitHub Actions, séparation dev / prod, token Instagram 60 jours renouvelé automatiquement, déclenchement sur ordre du propriétaire, Windsor en lecture seule
-  - [ ] Confirmer dans la doc GitHub les fonctions disponibles selon le plan (environnements et relecteurs sur dépôt privé)
-  - [ ] Confirmer dans la doc Meta : permissions, App Review, comportement de l'ancien token après renouvellement
-  - [ ] Prérequis propriétaire : emplacement et plan du dépôt, identifiant GitHub perso (relecteur), compte Instagram de test, app Meta, tokens saisis dans les secrets
-  - [ ] Développement sur `dev` (script Python standard, vérification SHA-256, mode `dry_run`, garde anti-double publication)
-  - [ ] Tests sur le compte de test, puis PR `dev → main` relue par le propriétaire
-  - [ ] Bascule de la procédure dans `CLAUDE.md`
-- **Reste à faire :** prérequis du propriétaire, puis autorisation explicite de déployer.
-- **Statut :** 🟡 En cours (25%) — aucun déploiement
+  - [x] Étude d'architecture, comparatif des options, limites du plan gratuit vérifiées (pas d'environnements ni de relecteurs sur dépôt privé)
+  - [x] Choix validés : GitHub Actions, deux dépôts, clic du propriétaire, token Instagram 60 jours renouvelé automatiquement, Windsor en lecture seule, purge de `content` sur approbation
+  - [x] Code préparé dans `publisher/` : publication, rotation, santé, alertes, 5 workflows, `.env.example`, `.gitignore`, guide d'installation
+  - [x] Tests hors ligne (APIs Meta et GitHub simulées) : 11/11
+  - [x] Outil de file d'attente `tools/content_queue.py` (dépôt `hexplique`) testé en local
+  - [ ] Installation par le propriétaire (dépôt, clé de déploiement, app Meta + token, GitHub App) — voir `publisher/README.md`
+  - [ ] Essai réel (mode « essai ») : confirmer que l'upload resumable accepte un token Instagram Login (doc Meta ambiguë, repli Facebook Login prévu)
+  - [ ] Bascule : procédure dans `CLAUDE.md`, tâche planifiée de production, notification « prêt à publier »
+  - [ ] Privatisation de hexplique-media par le propriétaire (T-04)
+- **Reste à faire :** installation par le propriétaire, puis essai réel.
+- **Statut :** 🟡 En cours (55%)
 
 ---
 

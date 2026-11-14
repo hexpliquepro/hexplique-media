@@ -38,6 +38,7 @@ Ce document sert de registre de mémoire persistant pour conserver les directive
 ### 🛡️ Validation & publication
 - **Aucune publication sans validation explicite du propriétaire pour ce contenu précis** (« Je valide l'épisode NN / ANN »). Un message planifié n'est pas une validation : revérifier le statut `validé` dans `CALENDRIER.md` avant de publier.
 - **Confidentialité des vidéos :** l'hébergement public des MP4 (GitHub Pages) est jugé inacceptable par le propriétaire (propriété et sécurité) → remplacement par l'upload direct chez Meta (T-02).
+- **Séparation des droits :** les secrets Meta vivent dans `hexplique-publish` (compte personnel du propriétaire), où l'agent n'a aucun accès ; l'agent prépare le code dans `hexplique-media/publisher/`, proposé par PR de synchronisation que le propriétaire relit.
 - **Windsor.ai :** conservé en **lecture seule, pour les statistiques uniquement** (décision 2026-11-14) une fois T-02 en place.
 
 ---
@@ -78,3 +79,6 @@ Ce document sert de registre de mémoire persistant pour conserver les directive
 | 2026-11-14 | Hébergement public des vidéos inacceptable → étude de l'upload direct chez Meta. | Sécurité |
 | 2026-11-14 | Choix : GitHub Actions ; séparation dev / prod ; token Instagram 60 jours à renouvellement automatisé ; publication déclenchée sur ordre du propriétaire ; Windsor en lecture seule (stats). | Architecture |
 | 2026-11-14 | Adoption du cadre `memoire.md` / `TASKS.md` et de la politique zéro-secret. | Gouvernance |
+| 2026-11-14 | Aucun surcoût GitHub (pas de plan Pro) : hexplique-media devient le dépôt privé des vidéos ; la publication passe par un dépôt privé `hexplique-publish` sur le compte personnel du propriétaire, sans aucun accès de l'agent ; publication lancée par le propriétaire (clic « Run workflow »). | Architecture |
+| 2026-11-14 | Purge du stockage : push forcé autorisé uniquement sur la branche `content` de hexplique-media, avec approbation du propriétaire avant chaque suppression. | Gouvernance |
+| 2026-11-14 | Pas de compte Instagram de test pour l'instant (à envisager plus tard) : le dev se fait par tests hors ligne et par mode « essai ». | Architecture |

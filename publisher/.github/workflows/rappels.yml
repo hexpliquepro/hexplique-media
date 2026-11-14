@@ -1,0 +1,31 @@
+# Rappel semestriel : les clés qui ne se renouvellent pas par API.
+name: rappels
+on:
+  schedule:
+    - cron: "7 8 1 1,7 *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  rappel:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Récupérer hexplique-publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" publish
+      - name: Ouvrir l'issue de rappel
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ALERT_TITLE: "Rotation semestrielle des clés"
+          ALERT_LABEL: "rappel"
+          ALERT_BODY: |
+            Deux clés ne se renouvellent pas automatiquement (GitHub ne le permet pas par API) :
+            1. Clé privée de la GitHub App « hexplique-rotation » : en générer une nouvelle, remplacer le secret APP_PRIVATE_KEY, lancer « rotation-token » pour vérifier, puis supprimer l'ancienne clé dans l'App.
+            2. Clé de déploiement sur hexplique-media : créer une nouvelle paire, l'ajouter en lecture seule, remplacer le secret MEDIA_DEPLOY_KEY, lancer « sante », puis supprimer l'ancienne.
+            Le guide pas à pas est dans README.md (section « Rotation manuelle »).
+        run: python3 publish/scripts/alert.py

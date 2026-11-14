@@ -1,0 +1,73 @@
+# Propose (par PR, à relire par le propriétaire) les mises à jour du code préparées dans
+# hexplique-media/publisher. Les fichiers .github/workflows ne sont jamais copiés automatiquement :
+# GitHub l'interdit au jeton des workflows ; s'ils diffèrent, la PR le signale pour copie manuelle.
+name: synchronisation
+on:
+  schedule:
+    - cron: "13 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Récupérer hexplique-publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: git clone --quiet "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" publish
+
+      - name: Récupérer la proposition (hexplique-media, branche main, lecture seule)
+        env:
+          DEPLOY_KEY: ${{ secrets.MEDIA_DEPLOY_KEY }}
+          MEDIA_REPO: ${{ vars.MEDIA_REPO }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" > ~/.ssh/known_hosts
+          eval "$(ssh-agent -s)" > /dev/null
+          ssh-add -q - <<< "${DEPLOY_KEY}"
+          GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=yes" \
+            git clone --quiet --depth 1 --branch main "git@github.com:${MEDIA_REPO}.git" media
+          ssh-agent -k > /dev/null
+
+      - name: Ouvrir une PR si le code proposé diffère
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cd publish
+          rsync -a --delete --exclude '.git/' --exclude '.github/' --exclude 'state/' ../media/publisher/ ./
+          WF_DIFF=$(diff -rq ../media/publisher/.github/workflows .github/workflows || true)
+          if [ -z "$(git status --porcelain)" ] && [ -z "$WF_DIFF" ]; then echo "Rien à synchroniser."; exit 0; fi
+          BR="sync/$(date -u +%Y%m%d-%H%M)"
+          BODY="Mise à jour proposée depuis hexplique-media/publisher ($(git -C ../media rev-parse --short HEAD)). À relire avant fusion."
+          if [ -n "$WF_DIFF" ]; then
+            BODY="$BODY"$'\n\n'"⚠️ Workflows à mettre à jour À LA MAIN (copie depuis hexplique-media/publisher/.github/workflows) :"$'\n'"\`\`\`"$'\n'"$WF_DIFF"$'\n'"\`\`\`"
+          fi
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "hexplique-publish"
+            git config user.email "actions@users.noreply.github.com"
+            git checkout -q -b "$BR"
+            git add -A
+            git commit -q -m "Synchronisation depuis hexplique-media/publisher"
+            git push -q origin "$BR"
+            python3 - "$BR" "$BODY" <<'PY'
+          import json, os, sys, urllib.request
+          br, body = sys.argv[1], sys.argv[2]
+          req = urllib.request.Request(
+              f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}/pulls",
+              data=json.dumps({"title": "Synchronisation du code de publication", "head": br,
+                               "base": "main", "body": body}).encode(),
+              headers={"Authorization": f"Bearer {os.environ['GH_TOKEN']}",
+                       "Accept": "application/vnd.github+json"}, method="POST")
+          print("PR :", json.load(urllib.request.urlopen(req))["html_url"])
+          PY
+          else
+            echo "$BODY"
+            exit 1
+          fi

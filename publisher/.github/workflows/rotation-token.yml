@@ -1,0 +1,48 @@
+# Renouvellement automatique du token Instagram (valable 60 jours) — chaque lundi.
+name: rotation-token
+on:
+  schedule:
+    - cron: "23 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: secrets
+  cancel-in-progress: false
+
+jobs:
+  rotation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Récupérer hexplique-publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" publish
+
+      - name: Installer les dépendances épinglées (empreintes vérifiées)
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install --quiet --require-hashes --only-binary=:all: -r publish/requirements.txt
+
+      - name: Renouveler le token et réécrire le secret
+        env:
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+          APP_ID: ${{ vars.APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+          META_API_VERSION: ${{ vars.META_API_VERSION }}
+          IG_GRAPH_BASE: ${{ vars.IG_GRAPH_BASE }}
+          IG_USER_ID: ${{ vars.IG_USER_ID }}
+          ROTATION_ENABLED: ${{ vars.ROTATION_ENABLED }}
+        run: .venv/bin/python publish/scripts/rotate_token.py
+
+      - name: Alerte en cas d'échec
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ALERT_TITLE: "Échec de la rotation du token Instagram"
+          ALERT_BODY: "La rotation hebdomadaire a échoué. Le token actuel reste valable jusqu'à la date indiquée dans la variable IG_TOKEN_EXPIRES_AT : relancer le workflow « rotation-token » ou régénérer le token à la main avant cette date."
+        run: python3 publish/scripts/alert.py || true

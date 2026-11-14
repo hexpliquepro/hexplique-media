@@ -1,0 +1,83 @@
+# Publication d'un réel validé — lancée À LA MAIN par le propriétaire (Actions → publier → Run workflow).
+# Aucune action tierce : uniquement git, ssh et Python standard.
+name: publier
+on:
+  workflow_dispatch:
+    inputs:
+      episode:
+        description: "Épisode à publier (ex. 04, A06)"
+        required: true
+        type: string
+      mode:
+        description: "essai = tout sauf la mise en ligne ; publier = mise en ligne"
+        required: true
+        type: choice
+        options: [essai, publier]
+        default: essai
+
+permissions:
+  contents: write   # enregistrer state/published.json (anti-doublon)
+  issues: write     # alerte en cas d'échec
+
+concurrency:
+  group: publication
+  cancel-in-progress: false
+
+jobs:
+  publier:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Récupérer hexplique-publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" publish
+
+      - name: Récupérer la vidéo validée (hexplique-media, branche content, lecture seule)
+        env:
+          DEPLOY_KEY: ${{ secrets.MEDIA_DEPLOY_KEY }}
+          MEDIA_REPO: ${{ vars.MEDIA_REPO }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" > ~/.ssh/known_hosts
+          eval "$(ssh-agent -s)" > /dev/null
+          ssh-add -q - <<< "${DEPLOY_KEY}"
+          GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=yes" \
+            git clone --quiet --depth 1 --branch content "git@github.com:${MEDIA_REPO}.git" media
+          ssh-agent -k > /dev/null
+
+      - name: Vérifier, envoyer chez Meta et publier
+        id: pub
+        env:
+          EPISODE: ${{ inputs.episode }}
+          MODE: ${{ inputs.mode }}
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+          META_API_VERSION: ${{ vars.META_API_VERSION }}
+          IG_GRAPH_BASE: ${{ vars.IG_GRAPH_BASE }}
+          IG_USER_ID: ${{ vars.IG_USER_ID }}
+          IG_EXPECTED_USERNAME: ${{ vars.IG_EXPECTED_USERNAME }}
+          MEDIA_DIR: media
+          STATE_FILE: publish/state/published.json
+        run: python3 publish/scripts/publish_meta.py
+
+      - name: Enregistrer la publication (anti-doublon)
+        if: inputs.mode == 'publier'
+        env:
+          EPISODE: ${{ inputs.episode }}
+        run: |
+          set -euo pipefail
+          cd publish
+          git config user.name "hexplique-publish"
+          git config user.email "actions@users.noreply.github.com"
+          git add state/published.json
+          git commit -q -m "Publié : épisode ${EPISODE}"
+          git push -q
+
+      - name: Alerte en cas d'échec
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ALERT_TITLE: "Échec de publication"
+          ALERT_BODY: "La publication de l'épisode ${{ inputs.episode }} (mode ${{ inputs.mode }}) a échoué. Rien n'est publié tant que le run n'est pas vert."
+        run: python3 publish/scripts/alert.py || true

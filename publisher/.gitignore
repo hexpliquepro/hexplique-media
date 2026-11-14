@@ -1,0 +1,19 @@
+# Politique zéro-secret : rien de sensible ne doit être versionné.
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.crt
+*.p12
+id_*
+secrets/
+credentials/
+*.log
+*.bak
+# Fichiers de travail
+.venv/
+__pycache__/
+media/
+publish/
+*.mp4

@@ -1,0 +1,53 @@
+# Contrôle quotidien : token Instagram, compte attendu, expiration, clé de déploiement.
+name: sante
+on:
+  schedule:
+    - cron: "41 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sante:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Récupérer hexplique-publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" publish
+
+      - name: Token Instagram
+        env:
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+          META_API_VERSION: ${{ vars.META_API_VERSION }}
+          IG_GRAPH_BASE: ${{ vars.IG_GRAPH_BASE }}
+          IG_USER_ID: ${{ vars.IG_USER_ID }}
+          IG_EXPECTED_USERNAME: ${{ vars.IG_EXPECTED_USERNAME }}
+          IG_TOKEN_EXPIRES_AT: ${{ vars.IG_TOKEN_EXPIRES_AT }}
+          ROTATION_ENABLED: ${{ vars.ROTATION_ENABLED }}
+        run: python3 publish/scripts/health.py
+
+      - name: Clé de déploiement (lecture de hexplique-media)
+        env:
+          DEPLOY_KEY: ${{ secrets.MEDIA_DEPLOY_KEY }}
+          MEDIA_REPO: ${{ vars.MEDIA_REPO }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" > ~/.ssh/known_hosts
+          eval "$(ssh-agent -s)" > /dev/null
+          ssh-add -q - <<< "${DEPLOY_KEY}"
+          GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=yes" git ls-remote --heads "git@github.com:${MEDIA_REPO}.git" > /dev/null
+          ssh-agent -k > /dev/null
+          echo "Clé de déploiement : OK"
+
+      - name: Alerte en cas d'échec
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ALERT_TITLE: "Contrôle de santé en échec"
+          ALERT_BODY: "Le contrôle quotidien a détecté un problème (token Instagram, compte, expiration ou clé de déploiement). Le détail est dans le run."
+        run: python3 publish/scripts/alert.py || true

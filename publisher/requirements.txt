@@ -1,0 +1,8 @@
+# Dépendances des scripts de rotation (runner ubuntu-24.04, Python 3.12, x86_64).
+# Versions et empreintes épinglées : pip refuse tout paquet qui ne correspond pas.
+pynacl==1.5.0 \
+    --hash=sha256:06b8f6fa7f5de8d5d2f7573fe8c863c051225a27b61e6860fd047b1775807858
+cffi==2.1.1 \
+    --hash=sha256:c1453022f490d2459a11819d83ad1d586e9ff65a12ac3e705ffebd46d3685dcf
+pycparser==3.12 \
+    --hash=sha256:a076f3f489b39b43ed13563a1dafe42447445bec2e294154ec5c57fcdda4c85e
