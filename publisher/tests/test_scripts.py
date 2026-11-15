@@ -230,6 +230,17 @@ class TestPublish(Base):
         self.assertFalse(state.exists())
 
 
+class TestEssaiSurEpisodePublie(TestPublish):
+    def test_essai_autorise_sur_episode_publie(self):
+        media, _ = self.media()
+        state = self.tmp / "state.json"
+        state.write_text(json.dumps([{"episode": "A06", "media_id": "X"}]))
+        code, out = self.run_script("publish_meta.py", EPISODE="A06", MODE="essai", IG_TOKEN=FAKE_TOKEN,
+                                    MEDIA_DIR=str(media), STATE_FILE=str(state))
+        self.assertEqual(code, 0, out)
+        self.assertFalse(any(c[1].endswith("/media_publish") for c in M.calls))
+
+
 class TestRotation(Base):
     def setUp(self):
         super().setUp()

@@ -94,7 +94,7 @@ def main():
         fail(f"empreinte différente de la version validée ({digest[:12]}… ≠ {ticket['sha256'][:12]}…)")
 
     state = json.loads(state_file.read_text(encoding="utf-8")) if state_file.is_file() else []
-    if any(e.get("episode") == episode for e in state):
+    if mode == "publier" and any(e.get("episode") == episode for e in state):
         fail(f"l'épisode {episode} est déjà publié : publication refusée")
 
     try:
