@@ -53,7 +53,7 @@ Ce document sert de registre de mémoire persistant pour conserver les directive
 - **Observabilité LLM :** Maintien d'un suivi de consommation des tokens en en-tête de `TASKS.md` et bilan réel consolidé à la livraison de chaque tâche. *Limite : l'agent n'a pas accès au compteur réel ; les valeurs sont des estimations signalées comme telles.*
 
 ### 🎬 Production des réels (synthèse de `CLAUDE.md`)
-- **Rythme :** un réel par jour à 10:00 (Paris). Notions (`NN`) mar./jeu./sam., actu (`ANN`) lun./mer./ven./dim. Produit la veille, envoyé pour validation.
+- **Rythme :** un réel par jour à 08:00 (Paris) depuis le 2026-11-20 (10:00 avant). Notions (`NN`) mar./jeu./sam., actu (`ANN`) lun./mer./ven./dim. Produit la veille, envoyé pour validation.
 - **Format :** 1080×1920, 30 fps, H.264, 20–45 s, une seule idée, sous-titres incrustés, zones sûres, aucun blanc > 0,5 s.
 - **Accroche « choc »** dans les 2 premières secondes, toujours vraie.
 - **Voix :** Piper `fr_FR-tom-medium`, débit 0,82, texte écrit pour l'oreille (fluidité) ; prononciations corrigées dans `engine/hx.py`. Musique générée en fond.
@@ -73,6 +73,7 @@ Ce document sert de registre de mémoire persistant pour conserver les directive
 | 2026-11-10 | Format actu ajouté, avec ses règles éditoriales. | Éditorial |
 | 2026-11-10 | Voix plus fluide : phrases liées, peu de « : », pas de gabarits répétés. | Production |
 | 2026-11-12 | Un réel par jour, publication à 10:00 (Paris). | Rythme |
+| 2026-11-19 | Publication à 08:00 (Paris) pour toutes les vidéos, à partir de A10 (20/11). | Rythme |
 | 2026-11-13 | Hashtags fixes `#cyber #hack #hacking #hacker`. | Éditorial |
 | 2026-11-13 | Accroche plus « choc » dans les 2 premières secondes. | Éditorial |
 | 2026-11-13 | Stories : passer par le sticker « Questions » (publication manuelle, non supportée par l'API). | Éditorial |
